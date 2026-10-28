@@ -35,6 +35,7 @@ with open("vendite.csv", "w", newline="", encoding="utf-8") as f:
 ### PARTE 2 ### IMPORTAZIONE IN PANDAS
 
 df = pd.read_csv("vendite.csv", parse_dates= ["Data"])
+print(df)
 
 print("Le prime 5 righe del dataframe: \n", df.head())
 print("\nStruttura del dataframe: \n", df.shape)
@@ -44,14 +45,18 @@ df.info
 
 df["Incasso"] = df["Quantità"] * df["Prezzo_unitario"]
 
+# 1. Incasso totale
 print("Incasso totale: ", df["Incasso"].sum())
 
+# 2. Incasso medio per negozio
 print("\nIncasso medio per negozio: \n")
 print(df.groupby("Negozio")["Incasso"].mean())
 
+# 3. Prodotti più venduti
 print("\nTop 3 prodotti per quantità: ")
 print(df.groupby("Prodotto")["Quantità"].sum().nlargest(3))
 
+# 4. Incasso medio per prodotto e negozio
 print("\nIncasso medio per Negozio e Prodotto: \n")
 print(df.groupby(["Negozio", "Prodotto"])["Incasso"].mean())
 
@@ -59,19 +64,20 @@ print(df.groupby(["Negozio", "Prodotto"])["Incasso"].mean())
 
 q = df["Quantità"].to_numpy()
 
+# 1. Media, Minimi e massimi e standard devition delle vendite
 media = np.mean(q)
 minimo = np.min(q)
 massimo = np.max(q)
 dev_std = np.std(q)
 
 print("Media:", media)
-print("Minimo:", minimo)
-print("Massimo:", massimo)
-print("Deviazione standard:", dev_std)
+print("\nMinimo:", minimo)
+print("\nMassimo:", massimo)
+print("\nDeviazione standard:", dev_std)
 
 # 2. Percentuale di vendite sopra la media
 perc_sopra_media = np.sum(q > media) / len(q) * 100
-print("Vendite sopra la media:", round(perc_sopra_media, 2), "%")
+print("\nVendite sopra la media:", round(perc_sopra_media, 2), "%")
 
 # 3. Array 2D con Quantità e Prezzo_unitario
 arr = df[["Quantità", "Prezzo_unitario"]].to_numpy()
@@ -125,3 +131,32 @@ print(df.groupby("Categoria")["Quantità"].mean())
 
 # 3. Salvataggio
 df.to_csv("vendite_analizzate.csv", index=False)
+
+### PARTE 7 ###
+
+# 1. Grafico combinato: barre (incasso medio) + linea (quantità media)
+stats = df.groupby("Categoria").agg(
+    Incasso_medio=("Incasso", "mean"),
+    Quantita_media=("Quantità", "mean"),
+)
+
+fig, ax1 = plt.subplots()
+
+ax1.bar(stats.index, stats["Incasso_medio"], color="steelblue")
+ax1.set_xlabel("Categoria")
+ax1.set_ylabel("Incasso medio (€)")
+
+ax2 = ax1.twinx()
+ax2.plot(stats.index, stats["Quantita_media"], color="red", marker="o")
+ax2.set_ylabel("Quantità media")
+
+plt.title("Incasso medio e quantità media per categoria")
+plt.tight_layout()
+plt.show()
+
+
+# 2. Funzione top_n_prodotti
+def top_n_prodotti(n):
+    return df.groupby("Prodotto")["Incasso"].sum().nlargest(n)
+
+print(top_n_prodotti(3))
