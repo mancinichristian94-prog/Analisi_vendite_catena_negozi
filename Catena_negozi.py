@@ -160,3 +160,4 @@ def top_n_prodotti(n):
     return df.groupby("Prodotto")["Incasso"].sum().nlargest(n)
 
 print(top_n_prodotti(3))
+
